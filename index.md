@@ -1,6 +1,6 @@
 ---
 layout: page
-title: プライバシーポリシー
+title: Devinを使ってみた結果
 ---
 
 # Devin を使ってみて
