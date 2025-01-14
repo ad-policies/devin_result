@@ -105,25 +105,25 @@ domain 内にアプリケーションのコアロジック(インターフェイ
 ```
 // domain/repositories/skill_repository.py
 class SkillRepository(ABC):
-@abstractmethod
-def get_by_id(self, skill_id: int) -> Optional[Skill]:
-pass
-
     @abstractmethod
-    def save(self, skill: Skill) -> None:
-        pass
+    def get_by_id(self, skill_id: int) -> Optional[Skill]:
+    pass
 
-    @abstractmethod
-    def search_by_name(self, name: str) -> List[Skill]:
-        pass
+        @abstractmethod
+        def save(self, skill: Skill) -> None:
+            pass
 
-    @abstractmethod
-    def get_latest_skills(self, limit: int = 10) -> List[Skill]:
-        pass
+        @abstractmethod
+        def search_by_name(self, name: str) -> List[Skill]:
+            pass
 
-    @abstractmethod
-    def check_similarity(self, weapon: str, feature_data: str) -> List[Skill]:
-        pass
+        @abstractmethod
+        def get_latest_skills(self, limit: int = 10) -> List[Skill]:
+            pass
+
+        @abstractmethod
+        def check_similarity(self, weapon: str, feature_data: str) -> List[Skill]:
+            pass
 
 ```
 
@@ -140,37 +140,37 @@ from ...common.settings import SKILL_DYNAMO_TABLE
 from .base_repository import BaseRepository
 
 class DynamoDBSkillRepository(SkillRepository, BaseRepository[Skill]):
-def **init**(self):
-SkillRepository.**init**(self)
-BaseRepository.**init**(self, SKILL_DYNAMO_TABLE, Skill)
+    def **init**(self):
+    SkillRepository.**init**(self)
+    BaseRepository.**init**(self, SKILL_DYNAMO_TABLE, Skill)
 
-    def get_by_id(self, skill_id: int) -> Optional[Skill]:
-        return BaseRepository.get_by_id(self, skill_id, 'skill_id')
+        def get_by_id(self, skill_id: int) -> Optional[Skill]:
+            return BaseRepository.get_by_id(self, skill_id, 'skill_id')
 
-    def save(self, skill: Skill) -> None:
-        super().save(skill)
+        def save(self, skill: Skill) -> None:
+            super().save(skill)
 
-    def search_by_name(self, name: str) -> List[Skill]:
-        return self.scan_with_filter('skill_name', name, 'contains')
+        def search_by_name(self, name: str) -> List[Skill]:
+            return self.scan_with_filter('skill_name', name, 'contains')
 
-    def get_latest_skills(self, limit: int = 10) -> List[Skill]:
-        return self.query_by_index(
-            'registration_date_index',
-            {'registration_flag': 1},
-            limit=limit,
-            scan_forward=False
-        )
-
-    def check_similarity(self, weapon: str, feature_data: str) -> List[Skill]:
-        try:
-            response = self.table.query(
-                IndexName='weapon_index',
-                KeyConditionExpression=Key('weapon').eq(weapon) & Key('feature_data').eq(feature_data),
-                ProjectionExpression='skill_id, skill_name, positions_list, user_id'
+        def get_latest_skills(self, limit: int = 10) -> List[Skill]:
+            return self.query_by_index(
+                'registration_date_index',
+                {'registration_flag': 1},
+                limit=limit,
+                scan_forward=False
             )
-            return self._to_items(response)
-        except Exception as e:
-            raise Exception(f"Failed to check skill similarity: {e}")
+
+        def check_similarity(self, weapon: str, feature_data: str) -> List[Skill]:
+            try:
+                response = self.table.query(
+                    IndexName='weapon_index',
+                    KeyConditionExpression=Key('weapon').eq(weapon) & Key('feature_data').eq(feature_data),
+                    ProjectionExpression='skill_id, skill_name, positions_list, user_id'
+                )
+                return self._to_items(response)
+            except Exception as e:
+                raise Exception(f"Failed to check skill similarity: {e}")
 
 ```
 
@@ -193,53 +193,53 @@ SkillRepopository の実装内容については先ほど書いた通りです�
 
 ```
 class SkillService:
-def **init**(self, repository: SkillRepository):
-self.repository = repository
+    def **init**(self, repository: SkillRepository):
+    self.repository = repository
 
-    def get_skill_details(self, skill_id: int) -> SkillDetails:
-        skill = self.repository.get_by_id(skill_id)
-        if not skill:
-            raise NotFoundError(f"Skill with id {skill_id} not found")
-        # TODO: Get user name from user repository
-        return SkillDetails(skill=skill, user_name="TODO")
+        def get_skill_details(self, skill_id: int) -> SkillDetails:
+            skill = self.repository.get_by_id(skill_id)
+            if not skill:
+                raise NotFoundError(f"Skill with id {skill_id} not found")
+            # TODO: Get user name from user repository
+            return SkillDetails(skill=skill, user_name="TODO")
 
-    def add_skill(self, skill: Skill) -> None:
-        if not skill.skill_name:
-            raise ValidationError("Skill name is required")
-        self.repository.save(skill)
+        def add_skill(self, skill: Skill) -> None:
+            if not skill.skill_name:
+                raise ValidationError("Skill name is required")
+            self.repository.save(skill)
 
-    def search_skills(self, name: str) -> List[Skill]:
-        if not name:
-            raise ValidationError("Search term is required")
-        return self.repository.search_by_name(name)
+        def search_skills(self, name: str) -> List[Skill]:
+            if not name:
+                raise ValidationError("Search term is required")
+            return self.repository.search_by_name(name)
 
-    def get_latest_skills(self, limit: int = 10) -> List[Skill]:
-        return self.repository.get_latest_skills(limit)
+        def get_latest_skills(self, limit: int = 10) -> List[Skill]:
+            return self.repository.get_latest_skills(limit)
 
-    def check_similarity(self, weapon: str, feature_data: str) -> List[Skill]:
-        if not weapon or not feature_data:
-            raise ValidationError("Weapon and feature data are required")
-        return self.repository.check_similarity(weapon, feature_data)
+        def check_similarity(self, weapon: str, feature_data: str) -> List[Skill]:
+            if not weapon or not feature_data:
+                raise ValidationError("Weapon and feature data are required")
+            return self.repository.check_similarity(weapon, feature_data)
 ```
 
 このような形で、　クラス内部では SkillRepository クラスのメソッドを呼び出すことでスキルに関する操作機能を提供しています。次に UserService を見てみるとこのようになっています。
 
 ```
 class UserService:
-def **init**(self, repository): # TODO: Add UserRepository
-self.repository = repository
+    def **init**(self, repository): # TODO: Add UserRepository
+    self.repository = repository
 
-    def get_user_name(self, user_id: str) -> str:
-        # TODO: Implement with actual repository
-        if not user_id:
-            raise NotFoundError(f"User with id {user_id} not found")
-        return "TODO: Implement"
+        def get_user_name(self, user_id: str) -> str:
+            # TODO: Implement with actual repository
+            if not user_id:
+                raise NotFoundError(f"User with id {user_id} not found")
+            return "TODO: Implement"
 
-    def get_mypage_data(self, user_id: str):
-        # TODO: Implement with actual repository
-        if not user_id:
-            raise NotFoundError(f"User with id {user_id} not found")
-        return {}
+        def get_mypage_data(self, user_id: str):
+            # TODO: Implement with actual repository
+            if not user_id:
+                raise NotFoundError(f"User with id {user_id} not found")
+            return {}
 
 ```
 
