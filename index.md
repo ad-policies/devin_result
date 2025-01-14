@@ -257,7 +257,7 @@ class UserService:
 >
 > - user_service = UserService(None) # TODO: Implement UserRepository
 >
-> 2.  TODO となっている理由：
+> 1.  TODO となっている理由：
 >
 > - 依存性注入パターンの一環として、UserService は UserRepository に依存する設計となっています
 > - UserRepository の実装は以下の要件を満たす必要があります：
@@ -266,13 +266,13 @@ class UserService:
 >   - エラーハンドリング
 >   - トランザクション管理
 >
-> 3.  アーキテクチャ上の利点：
+> 1.  アーキテクチャ上の利点：
 >
 > - テスト容易性：モックリポジトリを注入可能
 > - 疎結合：具体的な実装から分離
 > - 保守性：リポジトリの実装を変更しても、サービス層に影響なし
 >
-> 4.  今後の実装計画：
+> 1.  今後の実装計画：
 >
 > - UserRepository インターフェースの定義
 > - DynamoDBUserRepository の実装
